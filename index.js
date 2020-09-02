@@ -1,5 +1,13 @@
-const { ApolloServer, gql } = require("apollo-server");
+require("dotenv").config();
+
+const { ApolloServer, gql, UserInputError } = require("apollo-server");
 const { v4: uuidv4 } = require("uuid");
+const Book = require("./models/book-model");
+const Author = require("./models/author-model");
+
+const connectDB = require("./config/db");
+
+connectDB();
 
 let authors = [
   {
@@ -83,7 +91,7 @@ const typeDefs = gql`
   type Book {
     title: String!
     published: Int!
-    author: String!
+    author: Author!
     id: ID!
     genres: [String!]!
   }
@@ -117,56 +125,50 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
+    bookCount: () => Book.collection.countDocuments(),
+    authorCount: () => Author.collection.countDocuments(),
     allBooks: (parent, args) => {
-      if (args.author && args.genre) {
-        return books
-          .filter(
-            (book) => book.author.toLowerCase() === args.author.toLowerCase()
-          )
-          .filter((book) => book.genres.includes(args.genre.toLowerCase()));
-      }
-      if (args.author) {
-        return books.filter(
-          (book) => book.author.toLowerCase() === args.author.toLowerCase()
-        );
+      if (!args.author || args.genre) {
+        return Book.find({});
       }
       if (args.genre) {
-        return books.filter((book) =>
-          book.genres.includes(args.genre.toLowerCase())
-        );
+        return Book.find({ genre: { $in: [args.genre] } });
       }
-      return books;
     },
-    allAuthors: () => authors,
+    allAuthors: () => Author.find({}),
   },
 
   Author: {
-    bookCount: (parent, args) => {
-      let authored = books.filter((book) => book.author === parent.name);
-      return authored.length;
-    },
+    bookCount: (parent, args) =>
+      Book.countDocuments({ "author.name": parent.name }),
   },
 
   Mutation: {
-    addBook: (parent, args) => {
-      let newBook = {
-        ...args.data,
-        id: uuidv4(),
-      };
-      let authorPresent = authors.find(
-        (author) => author.name.toLowerCase() === args.data.author.toLowerCase()
-      );
+    addBook: async (parent, args) => {
+      const newBook = new Book({ ...args.data });
+
+      let authorPresent = Author.find({ name: args.data.author.name });
+
       if (!authorPresent) {
-        let newAuthor = {
-          name: args.data.author,
-          id: uuidv4(),
-        };
-        authors = authors.concat(newAuthor);
+        let newAuthor = new Author({ name: args.data.author.name });
+
+        try {
+          await newAuthor.save();
+        } catch (error) {
+          throw new UserInputError(error.message, {
+            invalidArgs: args,
+          });
+        }
       }
-      books = books.concat(newBook);
-      return newBook;
+
+      try {
+        newBook.save();
+        return newBook;
+      } catch (error) {
+        throw new UserInputError(error.message, {
+          invalidArgs: args,
+        });
+      }
     },
 
     editAuthor: (parent, args) => {

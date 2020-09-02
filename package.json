@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev" : "nodemon index.js"
+    "dev": "nodemon index.js"
   },
   "author": "ayobami agunroye",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "^2.16.0",
+    "dotenv": "^8.2.0",
     "graphql": "^15.3.0",
+    "mongoose": "^5.10.1",
+    "mongoose-unique-validator": "^2.0.3",
     "uuid": "^8.2.0"
   },
   "devDependencies": {
