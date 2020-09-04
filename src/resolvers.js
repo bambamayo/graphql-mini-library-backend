@@ -1,77 +1,9 @@
-require("dotenv").config();
-
-const {
-  ApolloServer,
-  gql,
-  UserInputError,
-  AuthenticationError,
-} = require("apollo-server");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Book = require("./models/book-model");
 const Author = require("./models/author-model");
 const User = require("./models/user-model");
-
-const connectDB = require("./config/db");
-connectDB();
-
-const typeDefs = gql`
-  type Book {
-    title: String!
-    published: Int!
-    author: Author!
-    id: ID!
-    genres: [String!]!
-    postedBy: User!
-  }
-
-  type Author {
-    name: String!
-    id: ID!
-    born: Int
-    bookCount: Int
-  }
-
-  type User {
-    fullname: String!
-    username: String!
-    favoriteGenre: String!
-    id: ID!
-    books: [Book!]!
-  }
-
-  type Token {
-    value: String!
-  }
-
-  type Query {
-    bookCount: Int!
-    authorCount: Int!
-    allBooks(author: String, genre: String): [Book!]!
-    allAuthors: [Author!]!
-    me: User
-  }
-
-  type Mutation {
-    addBook(data: CreateNewBookInput): Book!
-    editAuthor(id: ID!, setBornTo: Int!): Author
-    createUser(
-      username: String!
-      favoriteGenre: String
-      password: String!
-      fullname: String!
-    ): User
-    login(username: String!, password: String!): Token
-  }
-
-  input CreateNewBookInput {
-    title: String!
-    published: Int!
-    genres: [String!]!
-    author: String!
-  }
-`;
 
 const resolvers = {
   Query: {
@@ -280,24 +212,4 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: async ({ req }) => {
-    const auth = req ? req.headers.authorization : null;
-    if (auth && auth.toLowerCase().startsWith("bearer")) {
-      const decodedToken = jwt.verify(
-        auth.substring(7),
-        process.env.JWT_SECRET
-      );
-      const currentUser = await User.findById(decodedToken.userId).populate(
-        "books"
-      );
-      return { currentUser };
-    }
-  },
-});
-
-server.listen().then(({ url }) => {
-  console.log(`Server ready at ${url}`);
-});
+module.exports = resolvers;
