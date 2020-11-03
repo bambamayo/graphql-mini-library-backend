@@ -1,11 +1,6 @@
 require("dotenv").config();
 
-const {
-  ApolloServer,
-  gql,
-  UserInputError,
-  AuthenticationError,
-} = require("apollo-server");
+const { ApolloServer } = require("apollo-server");
 
 const jwt = require("jsonwebtoken");
 const User = require("./models/user-model");
