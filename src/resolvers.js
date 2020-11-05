@@ -162,9 +162,19 @@ const resolvers = {
         password: hashedPassword,
       });
 
-      return createdUser.save().catch((error) => {
-        throw new Error("Signing up failed please try again");
-      });
+      let token;
+      try {
+        token = jwt.sign({ userId: createdUser.id }, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+      } catch (error) {
+        throw new Error("Could not create new user, please try again");
+      }
+
+      return {
+        token,
+        user: createdUser,
+      };
     },
 
     login: async (parent, args) => {
@@ -207,7 +217,7 @@ const resolvers = {
         throw new Error("Log in failed, please try again");
       }
 
-      return { value: token };
+      return { token, user: existingUser };
     },
   },
 };

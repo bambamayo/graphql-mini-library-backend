@@ -25,8 +25,9 @@ module.exports = gql`
     books: [Book!]!
   }
 
-  type Token {
-    value: String!
+  type AuthPayload {
+    token: String!
+    user: User!
   }
 
   type Query {
@@ -45,8 +46,8 @@ module.exports = gql`
       favoriteGenre: String
       password: String!
       fullname: String!
-    ): User
-    login(username: String!, password: String!): Token
+    ): AuthPayload
+    login(username: String!, password: String!): AuthPayload
   }
 
   input CreateNewBookInput {
