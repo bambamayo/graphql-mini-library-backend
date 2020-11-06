@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { UserInputError } = require("apollo-server");
 const Book = require("./models/book-model");
 const Author = require("./models/author-model");
 const User = require("./models/user-model");
@@ -161,6 +162,12 @@ const resolvers = {
         ...args,
         password: hashedPassword,
       });
+
+      try {
+        await createdUser.save();
+      } catch (error) {
+        throw new Error("Could not create new user, please try again");
+      }
 
       let token;
       try {
