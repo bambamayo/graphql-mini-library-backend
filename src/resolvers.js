@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { UserInputError } = require("apollo-server");
+const { UserInputError, PubSub } = require("apollo-server");
 const Book = require("./models/book-model");
 const Author = require("./models/author-model");
 const User = require("./models/user-model");
+
+const pubsub = new PubSub();
 
 const resolvers = {
   Query: {
@@ -100,9 +102,12 @@ const resolvers = {
         const sess = await mongoose.startSession();
         sess.startTransaction();
         await newBook.save({ session: sess });
+        newBook.populate("author").execPopulate();
         currentUser.books.push(newBook);
         await currentUser.save({ session: sess });
         await sess.commitTransaction();
+
+        pubsub.publish("BOOK_ADDED", { bookAdded: newBook });
         return newBook;
       } catch (error) {
         throw new UserInputError(error.message, {
@@ -117,7 +122,7 @@ const resolvers = {
         throw new AuthenticationError("Not authenticated");
       }
       //Check if author exist
-      let authorPresent = await Author.findById(args.id);
+      let authorPresent = await Author.findOne({ name: args.name });
 
       if (!authorPresent) {
         return null;
@@ -125,10 +130,12 @@ const resolvers = {
 
       try {
         const author = await Author.findByIdAndUpdate(
-          args.id,
+          authorPresent.id,
           { born: args.setBornTo },
           { new: true }
         );
+
+        pubsub.publish("AUTHOR_EDITED", { authorEdited: author });
         return author;
       } catch (error) {
         throw new UserInputError(error.message, {
@@ -225,6 +232,15 @@ const resolvers = {
       }
 
       return { token, user: existingUser };
+    },
+  },
+
+  Subscription: {
+    bookAdded: {
+      subscribe: () => pubsub.asyncIterator(["BOOK_ADDED"]),
+    },
+    authorEdited: {
+      subscribe: () => pubsub.asyncIterator(["AUTHOR_EDITED"]),
     },
   },
 };
