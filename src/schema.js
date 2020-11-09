@@ -40,7 +40,7 @@ module.exports = gql`
 
   type Mutation {
     addBook(data: CreateNewBookInput): Book!
-    editAuthor(id: ID!, setBornTo: Int!): Author
+    editAuthor(name: String!, setBornTo: Int!): Author
     createUser(
       username: String!
       favoriteGenre: String
@@ -55,5 +55,10 @@ module.exports = gql`
     published: Int!
     genres: [String!]!
     author: String!
+  }
+
+  type Subscription {
+    bookAdded: Book!
+    authorEdited: Author!
   }
 `;
