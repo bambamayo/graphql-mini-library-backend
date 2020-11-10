@@ -178,9 +178,7 @@ const resolvers = {
 
       let token;
       try {
-        token = jwt.sign({ userId: createdUser.id }, process.env.JWT_SECRET, {
-          expiresIn: "1h",
-        });
+        token = jwt.sign({ userId: createdUser.id }, process.env.JWT_SECRET);
       } catch (error) {
         throw new Error("Could not create new user, please try again");
       }
@@ -224,9 +222,7 @@ const resolvers = {
 
       let token;
       try {
-        token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET, {
-          expiresIn: "1h",
-        });
+        token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET);
       } catch (error) {
         throw new Error("Log in failed, please try again");
       }
