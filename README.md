@@ -1,1 +1,1 @@
-Backend of a mini library, built with apollo-server, mongoose
+Backend of a mini library, built with apollo-server, mongodb, mongoose
