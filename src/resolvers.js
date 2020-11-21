@@ -125,7 +125,9 @@ const resolvers = {
       let authorPresent = await Author.findOne({ name: args.name });
 
       if (!authorPresent) {
-        return null;
+        throw new UserInputError(error.message, {
+          invalidArgs: args.name,
+        });
       }
 
       try {
@@ -215,7 +217,7 @@ const resolvers = {
       }
 
       if (!isValidPassword) {
-        throw new UserInputError("Invalid password, could not log you n", {
+        throw new UserInputError("Invalid password, could not log you in", {
           invalidArgs: args.password,
         });
       }
